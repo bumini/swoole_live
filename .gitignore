@@ -1,7 +1,7 @@
 *.log
 .idea
 /runtime
-/vendor/*
+/vendor
 composer.lock
 *.log
 thinkphp
