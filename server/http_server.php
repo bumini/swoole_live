@@ -6,7 +6,7 @@
  * Time: 16:34
  */
 
-$http = new Swoole\Http\Server("0.0.0.0", 9501);
+$http = new swoole_http_server("0.0.0.0", 9501);
 
 $http->set([
     'document_root'          => '/data/wwwroot/docment/swoole_live/public/static', // v4.4.0以下版本, 此处必须为绝对路径
@@ -24,6 +24,7 @@ $http->on('WorkerStart', function (swoole_server $server, $worker_id){
 });
 
 $http->on('request', function ($request, $response) {
+    $_SERVER = [];
     if(isset($request->server)){
         foreach ($request->server as $k => $v){
             $_SERVER[strtoupper($k)] = $v;
@@ -34,11 +35,13 @@ $http->on('request', function ($request, $response) {
             $_SERVER[strtoupper($k)] = $v;
         }
     }
+    $_GET = [];
     if(isset($request->get)){
         foreach ($request->get as $k => $v){
             $_GET[$k] = $v;
         }
     }
+    $_POST = [];
     if(isset($request->post)){
         foreach ($request->post as $k => $v){
             $_POST[$k] = $v;
@@ -46,10 +49,14 @@ $http->on('request', function ($request, $response) {
     }
     //开启缓冲区
     ob_start();
-    // 执行应用并响应
-    think\Container::get('app', [defined('APP_PATH') ? APP_PATH : ''])
-        ->run()
-        ->send();
+    try {
+        // 执行应用并响应
+        think\Container::get('app', [APP_PATH])
+            ->run()
+            ->send();
+    }catch (\Exception $e){
+
+    }
     $res = ob_get_contents();
     ob_end_clean();
     $response->end($res);
